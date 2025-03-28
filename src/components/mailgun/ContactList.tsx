@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { ContactData } from "@/types/mailgun";
 import { Upload, FileSpreadsheet, Download } from "lucide-react";
@@ -157,7 +158,7 @@ const ContactList = ({ contacts, setContacts, onNext }: ContactListProps) => {
         </div>
         
         {contacts.length > 0 && (
-          <div className="rounded-md border overflow-hidden">
+          <ScrollArea className="h-[400px] rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -198,7 +199,7 @@ const ContactList = ({ contacts, setContacts, onNext }: ContactListProps) => {
                 )}
               </TableBody>
             </Table>
-          </div>
+          </ScrollArea>
         )}
       </CardContent>
       <CardFooter>
