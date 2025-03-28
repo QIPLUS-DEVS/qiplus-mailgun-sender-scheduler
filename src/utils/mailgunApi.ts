@@ -19,11 +19,26 @@ export async function sendEmail(
 
     // Preparar as variáveis personalizadas no conteúdo HTML
     let personalizedHtml = htmlContent;
+    let personalizedSubject = subject;
+    
     if (variables) {
       // Substituir as variáveis no formato %variable_name% pelo valor correspondente
       Object.entries(variables).forEach(([key, value]) => {
         const variablePattern = new RegExp(`%${key}%`, 'g');
         personalizedHtml = personalizedHtml.replace(variablePattern, value);
+        personalizedSubject = personalizedSubject.replace(variablePattern, value);
+      });
+      
+      // Adicionar suporte para variáveis especiais de destinatário
+      const recipientVariables = {
+        'recipient.name': name || '',
+        'recipient.email': email
+      };
+      
+      Object.entries(recipientVariables).forEach(([key, value]) => {
+        const variablePattern = new RegExp(`%${key}%`, 'g');
+        personalizedHtml = personalizedHtml.replace(variablePattern, value);
+        personalizedSubject = personalizedSubject.replace(variablePattern, value);
       });
     }
 
@@ -34,7 +49,7 @@ export async function sendEmail(
     const formData = new FormData();
     formData.append('from', from);
     formData.append('to', to);
-    formData.append('subject', subject);
+    formData.append('subject', personalizedSubject);
     formData.append('html', personalizedHtml);
 
     // Configurar autorização e outras opções da requisição

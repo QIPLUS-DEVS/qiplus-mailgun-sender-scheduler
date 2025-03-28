@@ -49,6 +49,9 @@ const EmailComposer = ({ emailData, setEmailData, onNext }: EmailComposerProps) 
               onChange={handleChange}
               required
             />
+            <p className="text-sm text-muted-foreground">
+              Você pode usar variáveis também no assunto, como %recipient.name%
+            </p>
           </div>
           
           <div className="space-y-2">
@@ -62,9 +65,14 @@ const EmailComposer = ({ emailData, setEmailData, onNext }: EmailComposerProps) 
               onChange={handleChange}
               required
             />
-            <p className="text-sm text-muted-foreground">
-              Cole seu HTML completo aqui. Você pode usar variáveis como %recipient.name%, %recipient.email%, etc.
-            </p>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>Cole seu HTML completo aqui. Você pode usar variáveis nos seguintes formatos:</p>
+              <ul className="list-disc pl-5">
+                <li><code>%recipient.name%</code> - Nome do destinatário</li>
+                <li><code>%recipient.email%</code> - Email do destinatário</li>
+                <li><code>%nome_da_coluna%</code> - Valores das colunas da sua planilha</li>
+              </ul>
+            </div>
           </div>
         </CardContent>
         <CardFooter>
