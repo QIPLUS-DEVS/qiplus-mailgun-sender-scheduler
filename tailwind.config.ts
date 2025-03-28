@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				mailgun: {
+					DEFAULT: '#F0593A',
+					light: '#F7917C',
+					dark: '#B83A20',
 				}
 			},
 			borderRadius: {
