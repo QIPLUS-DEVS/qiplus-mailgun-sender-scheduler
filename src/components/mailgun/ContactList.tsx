@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { ContactData } from "@/types/mailgun";
-import { Upload, FileSpreadsheet } from "lucide-react";
+import { Upload, FileSpreadsheet, Download } from "lucide-react";
 import * as XLSX from 'xlsx';
+import { generateSampleSpreadsheet } from "@/utils/excelUtils";
 
 interface ContactListProps {
   contacts: ContactData[];
@@ -99,6 +100,14 @@ const ContactList = ({ contacts, setContacts, onNext }: ContactListProps) => {
     setContacts((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleDownloadSample = () => {
+    generateSampleSpreadsheet();
+    toast({
+      title: "Download iniciado",
+      description: "O download da planilha de exemplo foi iniciado."
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -111,6 +120,18 @@ const ContactList = ({ contacts, setContacts, onNext }: ContactListProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadSample}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Baixar planilha de exemplo
+          </Button>
+        </div>
+        
         <div className="border-2 border-dashed rounded-lg p-8 text-center">
           <div className="flex flex-col items-center gap-2">
             <Upload className="h-10 w-10 text-muted-foreground" />
