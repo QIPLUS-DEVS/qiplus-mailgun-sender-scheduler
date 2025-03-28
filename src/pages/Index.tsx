@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail } from "lucide-react";
@@ -19,8 +18,8 @@ const Index = () => {
   });
   
   const [emailData, setEmailData] = useState<EmailData>({
-    subject: "",
-    htmlContent: "",
+    subject: localStorage.getItem("mailgunEmailSubject") || "",
+    htmlContent: localStorage.getItem("mailgunEmailHtmlContent") || "",
   });
   
   const [contacts, setContacts] = useState<ContactData[]>([]);

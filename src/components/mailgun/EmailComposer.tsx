@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmailData } from "@/types/mailgun";
 import { FileText } from "lucide-react";
+import { useEffect } from "react";
 
 interface EmailComposerProps {
   emailData: EmailData;
@@ -14,11 +15,32 @@ interface EmailComposerProps {
 }
 
 const EmailComposer = ({ emailData, setEmailData, onNext }: EmailComposerProps) => {
+  // Load saved template from localStorage on component mount
+  useEffect(() => {
+    const savedSubject = localStorage.getItem("mailgunEmailSubject");
+    const savedHtmlContent = localStorage.getItem("mailgunEmailHtmlContent");
+    
+    if (savedSubject || savedHtmlContent) {
+      setEmailData(prev => ({
+        ...prev,
+        subject: savedSubject || prev.subject,
+        htmlContent: savedHtmlContent || prev.htmlContent
+      }));
+    }
+  }, [setEmailData]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setEmailData((prev) => ({ ...prev, [name]: value }));
+    
+    // Save to localStorage whenever values change
+    if (name === "subject") {
+      localStorage.setItem("mailgunEmailSubject", value);
+    } else if (name === "htmlContent") {
+      localStorage.setItem("mailgunEmailHtmlContent", value);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
