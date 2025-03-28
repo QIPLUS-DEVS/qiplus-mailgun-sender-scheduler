@@ -33,3 +33,9 @@ export interface SendProgressData {
     type: 'info' | 'success' | 'error';
   }[];
 }
+
+export interface MailgunApiResponse {
+  id: string;
+  message: string;
+  status: number;
+}

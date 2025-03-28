@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { MailgunConfig, EmailData, ContactData, ScheduleConfig, SendProgressData } from "@/types/mailgun";
 import { MailPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { sendEmail } from "@/utils/mailgunApi";
 
 interface SendEmailsPanelProps {
   mailgunConfig: MailgunConfig;
@@ -62,7 +63,7 @@ const SendEmailsPanel = ({
     addLog("Iniciando processo de envio de emails", "info");
     addLog(`Configuração: ${scheduleConfig.emailsPerHour} emails/hora, lotes de ${scheduleConfig.batchSize}, intervalos de ${scheduleConfig.intervalBetweenBatches} minutos`, "info");
     
-    // Simulate email sending (in a real app, this would call the Mailgun API)
+    // Iniciar o envio de emails em lotes
     processBatch(0);
   };
 
@@ -71,7 +72,7 @@ const SendEmailsPanel = ({
     const endIdx = Math.min(startIdx + batchSize, contacts.length);
     
     if (startIdx >= contacts.length) {
-      // All contacts processed
+      // Todos os contatos processados
       setSendProgress((prev) => ({ ...prev, inProgress: false }));
       addLog("Processo de envio concluído", "info");
       toast({
@@ -84,47 +85,54 @@ const SendEmailsPanel = ({
     const currentBatch = contacts.slice(startIdx, endIdx);
     addLog(`Processando lote ${Math.floor(startIdx / batchSize) + 1}: emails ${startIdx + 1} até ${endIdx}`, "info");
     
-    // Process each contact in the batch (with small delay to simulate processing)
+    // Calcular intervalo entre emails para respeitar o limite por hora
+    const emailIntervalMs = Math.ceil(3600 * 1000 / scheduleConfig.emailsPerHour);
+    
+    // Processar cada contato no lote
     currentBatch.forEach((contact, idx) => {
       setTimeout(() => {
-        simulateSendEmail(contact);
-      }, idx * 1000); // 1 second delay between each email in batch
+        sendEmailToContact(contact);
+      }, idx * emailIntervalMs);
     });
     
-    // Schedule next batch
-    const nextBatchTime = scheduleConfig.intervalBetweenBatches * 60 * 1000; // convert to ms
+    // Agendar próximo lote
+    const nextBatchTime = scheduleConfig.intervalBetweenBatches * 60 * 1000; // converter para ms
     setTimeout(() => {
       processBatch(endIdx);
     }, nextBatchTime);
     
-    // Log scheduled next batch
+    // Registrar agendamento do próximo lote
     const nextTime = new Date(Date.now() + nextBatchTime);
     addLog(`Próximo lote agendado para ${nextTime.toLocaleTimeString()}`, "info");
   };
   
-  const simulateSendEmail = (contact: ContactData) => {
-    // Simulate API call success/failure (90% success rate in this simulation)
-    const isSuccess = Math.random() > 0.1;
-    
-    if (isSuccess) {
-      setSendProgress((prev) => ({
-        ...prev,
-        sentEmails: prev.sentEmails + 1,
-      }));
-      addLog(`Email enviado para ${contact.email}`, "success");
-    } else {
+  const sendEmailToContact = async (contact: ContactData) => {
+    try {
+      addLog(`Enviando email para ${contact.email}...`, "info");
+      
+      const result = await sendEmail(mailgunConfig, emailData, contact);
+      
+      if (result.success) {
+        setSendProgress((prev) => ({
+          ...prev,
+          sentEmails: prev.sentEmails + 1,
+        }));
+        addLog(`Email enviado com sucesso para ${contact.email}${result.id ? ` (ID: ${result.id})` : ''}`, "success");
+      } else {
+        setSendProgress((prev) => ({
+          ...prev,
+          failedEmails: prev.failedEmails + 1,
+        }));
+        addLog(`Falha ao enviar para ${contact.email}: ${result.message}`, "error");
+      }
+    } catch (error) {
       setSendProgress((prev) => ({
         ...prev,
         failedEmails: prev.failedEmails + 1,
       }));
-      addLog(`Falha ao enviar para ${contact.email}`, "error");
+      addLog(`Erro ao enviar para ${contact.email}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, "error");
     }
   };
-
-  // In a real app, you would implement actual Mailgun API calls here
-  // using their REST API. The implementation would depend on whether
-  // you're using a serverless function, a backend API, or a direct
-  // browser API call (not recommended for production due to API key exposure)
 
   return (
     <Card>
