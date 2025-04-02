@@ -22,6 +22,15 @@ export interface ScheduleConfig {
   intervalBetweenBatches: number; // in minutes
 }
 
+export interface SentEmail {
+  id?: string;
+  email: string;
+  name?: string;
+  timestamp: string;
+  status: 'success' | 'failed';
+  errorMessage?: string;
+}
+
 export interface SendProgressData {
   totalContacts: number;
   sentEmails: number;
@@ -32,6 +41,7 @@ export interface SendProgressData {
     message: string;
     type: 'info' | 'success' | 'error';
   }[];
+  sentEmailsList: SentEmail[];
 }
 
 export interface MailgunApiResponse {

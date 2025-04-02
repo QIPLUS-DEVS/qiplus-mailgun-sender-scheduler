@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail } from "lucide-react";
@@ -6,8 +7,9 @@ import EmailComposer from "@/components/mailgun/EmailComposer";
 import ContactList from "@/components/mailgun/ContactList";
 import ScheduleSettings from "@/components/mailgun/ScheduleSettings";
 import SendEmailsPanel from "@/components/mailgun/SendEmailsPanel";
+import SentEmailsPanel from "@/components/mailgun/SentEmailsPanel";
 import { useToast } from "@/components/ui/use-toast";
-import { ContactData, MailgunConfig, EmailData, ScheduleConfig } from "@/types/mailgun";
+import { ContactData, MailgunConfig, EmailData, ScheduleConfig, SendProgressData, SentEmail } from "@/types/mailgun";
 
 const Index = () => {
   const { toast } = useToast();
@@ -30,6 +32,8 @@ const Index = () => {
     intervalBetweenBatches: 5, // minutes
   });
   
+  const [sentEmails, setSentEmails] = useState<SentEmail[]>([]);
+  
   const [activeTab, setActiveTab] = useState("api-settings");
   
   const handleApiSettingsSave = (config: MailgunConfig) => {
@@ -44,6 +48,10 @@ const Index = () => {
     });
     
     setActiveTab("email-composer");
+  };
+  
+  const handleSendProgressUpdate = (progress: SendProgressData) => {
+    setSentEmails(progress.sentEmailsList);
   };
 
   const isConfigValid = () => {
@@ -73,12 +81,13 @@ const Index = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-8">
+        <TabsList className="grid grid-cols-6 mb-8">
           <TabsTrigger value="api-settings">Configuração API</TabsTrigger>
           <TabsTrigger value="email-composer" disabled={!isConfigValid()}>Composição</TabsTrigger>
           <TabsTrigger value="contacts" disabled={!isConfigValid() || !isEmailValid()}>Contatos</TabsTrigger>
           <TabsTrigger value="schedule" disabled={!isConfigValid() || !isEmailValid() || !areContactsValid()}>Agendamento</TabsTrigger>
           <TabsTrigger value="send" disabled={!isConfigValid() || !isEmailValid() || !areContactsValid()}>Enviar</TabsTrigger>
+          <TabsTrigger value="sent-emails">Enviados</TabsTrigger>
         </TabsList>
         
         <TabsContent value="api-settings">
@@ -118,6 +127,13 @@ const Index = () => {
             emailData={emailData}
             contacts={contacts}
             scheduleConfig={scheduleConfig}
+            onSendProgressUpdate={handleSendProgressUpdate}
+          />
+        </TabsContent>
+        
+        <TabsContent value="sent-emails">
+          <SentEmailsPanel 
+            sentEmails={sentEmails}
           />
         </TabsContent>
       </Tabs>

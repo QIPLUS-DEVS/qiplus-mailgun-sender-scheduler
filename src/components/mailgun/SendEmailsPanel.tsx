@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
-import { MailgunConfig, EmailData, ContactData, ScheduleConfig, SendProgressData } from "@/types/mailgun";
+import { MailgunConfig, EmailData, ContactData, ScheduleConfig, SendProgressData, SentEmail } from "@/types/mailgun";
 import { MailPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { sendEmail } from "@/utils/mailgunApi";
@@ -14,6 +14,7 @@ interface SendEmailsPanelProps {
   emailData: EmailData;
   contacts: ContactData[];
   scheduleConfig: ScheduleConfig;
+  onSendProgressUpdate?: (progress: SendProgressData) => void;
 }
 
 const SendEmailsPanel = ({
@@ -21,6 +22,7 @@ const SendEmailsPanel = ({
   emailData,
   contacts,
   scheduleConfig,
+  onSendProgressUpdate
 }: SendEmailsPanelProps) => {
   const { toast } = useToast();
   const [sendProgress, setSendProgress] = useState<SendProgressData>({
@@ -29,7 +31,15 @@ const SendEmailsPanel = ({
     failedEmails: 0,
     inProgress: false,
     logs: [],
+    sentEmailsList: []
   });
+
+  useEffect(() => {
+    // Update parent component with progress data when it changes
+    if (onSendProgressUpdate) {
+      onSendProgressUpdate(sendProgress);
+    }
+  }, [sendProgress, onSendProgressUpdate]);
 
   const addLog = (message: string, type: 'info' | 'success' | 'error') => {
     setSendProgress((prev) => ({
@@ -58,6 +68,7 @@ const SendEmailsPanel = ({
       ...prev,
       inProgress: true,
       logs: [],
+      sentEmailsList: []
     }));
 
     addLog("Iniciando processo de envio de emails", "info");
@@ -112,25 +123,60 @@ const SendEmailsPanel = ({
       
       const result = await sendEmail(mailgunConfig, emailData, contact);
       
+      const timestamp = new Date().toLocaleTimeString();
+      
       if (result.success) {
+        // Add to sent emails list with success status
+        const sentEmail: SentEmail = {
+          email: contact.email,
+          name: contact.name,
+          timestamp: timestamp,
+          status: 'success',
+          id: result.id
+        };
+        
         setSendProgress((prev) => ({
           ...prev,
           sentEmails: prev.sentEmails + 1,
+          sentEmailsList: [...prev.sentEmailsList, sentEmail]
         }));
         addLog(`Email enviado com sucesso para ${contact.email}${result.id ? ` (ID: ${result.id})` : ''}`, "success");
       } else {
+        // Add to sent emails list with failed status
+        const sentEmail: SentEmail = {
+          email: contact.email,
+          name: contact.name,
+          timestamp: timestamp,
+          status: 'failed',
+          errorMessage: result.message
+        };
+        
         setSendProgress((prev) => ({
           ...prev,
           failedEmails: prev.failedEmails + 1,
+          sentEmailsList: [...prev.sentEmailsList, sentEmail]
         }));
         addLog(`Falha ao enviar para ${contact.email}: ${result.message}`, "error");
       }
     } catch (error) {
+      const timestamp = new Date().toLocaleTimeString();
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      // Add to sent emails list with failed status
+      const sentEmail: SentEmail = {
+        email: contact.email,
+        name: contact.name,
+        timestamp: timestamp,
+        status: 'failed',
+        errorMessage: errorMessage
+      };
+      
       setSendProgress((prev) => ({
         ...prev,
         failedEmails: prev.failedEmails + 1,
+        sentEmailsList: [...prev.sentEmailsList, sentEmail]
       }));
-      addLog(`Erro ao enviar para ${contact.email}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, "error");
+      addLog(`Erro ao enviar para ${contact.email}: ${errorMessage}`, "error");
     }
   };
 
